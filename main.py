@@ -20,6 +20,7 @@ DifTemps2 = [0,0,0,0,0,0,0,0,0,0]
 DeltaTemps = [0,0,0,0,0,0,0,0,0]
 
 BlueEsp = TestFlutterBlue.FlutterBlue()
+Perifericos.passFunBlue(BlueEsp.enviaBlue)
 
 #IotAWS = AlexaAWS.AWS()
 
@@ -88,8 +89,11 @@ while(True):
     if time.ticks_diff(timeAtual,timeTemp)%50 == 0: Perifericos.MotorLogic()
     if time.ticks_diff(timeAtual,timeTemp)%10 == 0: Perifericos.FiltraEntradas()
     
+    #if time.ticks_diff(timeAtual,timeTemp)%500 == 0: IotAWS.checaMsg()
+    
     if time.ticks_diff(timeAtual,timeTemp)%1500 == 0: controleTemp() #Como 1500 so acontece uma vez ate chegar no 2000 e zerar vai funcionar a cada 2000
     
+    if time.ticks_diff(timeAtual,timeTemp)%1000 == 0: Perifericos.checaAlarmes()
     
 
     

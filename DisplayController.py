@@ -122,6 +122,7 @@ def MonitoraDisplay(Comando = 0): #Solicita resposta do nextion e retorna respos
             display.cmd("page AlarmeAtivos")
         
         if Comando == "Motor":
+            print(MensagemList)
             Perifericos.DefineAlvo(0)
             if MensagemList[2] == "Press":
                 Perifericos.DispDefUpDown(MensagemList[1], 1)

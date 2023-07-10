@@ -27,10 +27,16 @@ class FlutterBlue:
             TGrelha, TSensor1, TSensor2, TempAlvo = Perifericos.GetTemps()
             self.uart.write("Temp," + str(int(TGrelha)) + "," + str(int(TSensor1)) + "," + str(int(TSensor2)) + "," + str(int(TempAlvo))) 
             
-        elif(msgRecebida[0] == "Alarme"):
+        elif msgRecebida[0] == "GrausAlarme":
+            Perifericos.appendAlarm(msgRecebida[0],[msgRecebida[1],int(msgRecebida[2])])
+            
+        elif msgRecebida[0] == "TimerAlarme":
+            Perifericos.appendAlarm(msgRecebida[0],[msgRecebida[1],msgRecebida[2],time.ticks_ms()])
+            
+        elif(msgRecebida[0] == "Alarme"): #Mostrar alarmes
             
             TimerAlarme, GrausAlarme = Perifericos.getAlarm()
-            print(TimerAlarme)
+            print(TimerAlarme, GrausAlarme)
                 
             for x in range(len(TimerAlarme)):
                 self.uart.write(f"AlarmT,{x},{TimerAlarme[x][0]},{TimerAlarme[x][1]}")
@@ -62,12 +68,15 @@ class FlutterBlue:
         
     #------------ FIM Rotina Blue ---------------------------
         
+    def enviaBlue(self, msg):
+        self.uart.write(msg)
+        
     #------------ Cria OBJ Blue -----------------------------
     def __init__(self):
         name = "ChurrasTech"  #"78:E3:6D:17:1A:4E"
         ble = bluetooth.BLE() 
         self.uart = BLEUART(ble, name)
-        self.uart.irq(handler = self.on_rx)
+        self.uart.irq(handler = self.on_rx)     
         print("Iniciou Blue")
 
 #------------ FIM Cria OBJ Blue ---------------------------

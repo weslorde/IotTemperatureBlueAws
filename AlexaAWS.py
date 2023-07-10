@@ -30,7 +30,8 @@ class AWS:
 
         #if you change the topic make sure update AWS policy
         self.MQTT_TOPIC = "$aws/things/ChurrasTech2406/shadow/update"
-        self.MQTT_TOPIC_Sub = "$aws/things/ChurrasTech2406/shadow/update/delta"
+        #self.MQTT_TOPIC_Sub = "$aws/things/ChurrasTech2406/shadow/update/delta"
+        self.MQTT_TOPIC_Sub = "$aws/things/ChurrasTech2406/test/tamanho"
 
         #Change the following three settings to match your environment
         self.MQTT_HOST = "a35wgflbzj4nrh-ats.iot.sa-east-1.amazonaws.com"
@@ -38,10 +39,17 @@ class AWS:
         self.iniciaAWS()
         
 
-    def sub_cb(topic, msg):
-      print(topic, msg)
+    def sub_cb(ue ,topic, msg):
+      print(msg)
       if topic == b'notification' and msg == b'received':
         print('ESP received hello message')
+      with open("arquivo.py", "w") as file:
+          file.write(msg)
+      
+      time.sleep(5)
+      execfile('arquivo.py')
+
+      
 
 
     def restart_and_reconnect():
@@ -74,6 +82,7 @@ class AWS:
             self.mqtt_client.set_callback(self.sub_cb)
             self.mqtt_client.connect()
             print('MQTT Connected')
+            self.mqtt_client.subscribe(self.MQTT_TOPIC_Sub)
 
             
         except Exception as e:
@@ -94,7 +103,8 @@ class AWS:
             
      
     def iniciaAWS(self):
-        self.topic_sub = "$aws/things/ChurrasTech2406/shadow/update/delta"
+        #self.topic_sub = "$aws/things/ChurrasTech2406/shadow/update/delta"
+        self.topic_sub = "$aws/things/ChurrasTech2406/test/tamanho"
         #start execution
         try:
             print("Connecting MQTT...")

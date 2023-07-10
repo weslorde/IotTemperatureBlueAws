@@ -8,9 +8,9 @@ T1 = MAX6675(sck_pin=18, cs_pin=19, so_pin=21) #Inicia comunicacao com o modulo 
 T2 = MAX6675(sck_pin=14, cs_pin=27, so_pin=26) #Inicia comunicacao com o modulo max6675 responsavel por comunicar com o termopar tipo K
 T3 = MAX6675(sck_pin=25, cs_pin=33, so_pin=32) #Inicia comunicacao com o modulo max6675 responsavel por comunicar com o termopar tipo K
 
-global Grelha
-global Sensor1
-global Sensor2
+global TGrelha
+global TSensor1
+global TSensor2
 global TempAlvo
 TGrelha = 0
 TSensor1 = 0
@@ -193,3 +193,58 @@ def delAlarm(pag, item, indice):
         GrausAlarme.pop(int(indice)+m)
     elif item == 'x' or item == "timer":
         TimerAlarme.pop(int(indice)+m)
+
+global enviaBlue
+def passFunBlue(fun):
+    global enviaBlue
+    enviaBlue = fun
+
+def checaAlarmes():
+    global GrausAlarme
+    global TimerAlarme
+    global TGrelha
+    global TSensor1
+    global TSensor2
+    global TempAlvo
+    global enviaBlue
+    x = 0
+    
+    for item in TimerAlarme:
+        #print(item)
+        diffTime = time.ticks_diff(time.ticks_ms(),item[2])
+        
+        minutos = str( (diffTime // 1000 // 60) % 60 )
+        horas = str( (diffTime // 1000 // 3600) % 24 )
+        
+        #print(minutos)
+        #print(horas)
+        #print(f"test 1: {horas == item[0]}, test 2: {minutos >= item[1]}")
+        
+        if (horas == item[0] and minutos >= item[1]):
+            enviaBlue(f"NotT,{horas},{minutos}")
+            delAlarm(0, "timer", x)
+        x += 1
+    
+    listTemps = {"Grelha": TGrelha, "Sensor1": TSensor1, "Sensor2": TSensor2}
+    x=0 
+    for item in GrausAlarme:
+        sensor = item[0]
+        tempAviso = item[1]
+        if ( (listTemps[sensor] <= tempAviso + 5) and (listTemps[sensor] >= tempAviso - 5) ):
+            enviaBlue(f"NotG,{sensor},{tempAviso}")
+            delAlarm(0, "graus", x)   
+    x += 1
+        
+        
+        
+        
+        
+        
+    
+    
+    
+    
+    
+    
+    
+    
