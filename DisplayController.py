@@ -1,10 +1,12 @@
 # Funções baixadas
 import time
 import esp32
+import sys
 import Perifericos
 from machine import Pin, lightsleep, TouchPad
 from nextion import nextion # Responsavel pela comunicação com a tela
 
+import wifi
 display = nextion(16, 17, 9600)
 
 global Estado
@@ -40,6 +42,14 @@ def MonitoraDisplay(Comando = 0): #Solicita resposta do nextion e retorna respos
             print(MensagemList[1])
             if MensagemList[1] == "ShowTemps":
                 SendTemps(Perifericos.GetTemps())
+            if MensagemList[1] == "Config":
+                Pref = wifi.CarregarInfo()
+                if Pref["Modo"] == "Bluetooth":
+                    display.cmd("bt0.val=1")
+                    display.cmd("bt1.val=0")
+                elif Pref["Modo"] == "AWS":
+                    display.cmd("bt0.val=0")
+                    display.cmd("bt1.val=1")
             
         elif Comando == "Desligar":
             display.sleep(1)
@@ -56,7 +66,7 @@ def MonitoraDisplay(Comando = 0): #Solicita resposta do nextion e retorna respos
             Perifericos.appendAlarm(Comando,[MensagemList[2],int(MensagemList[1])])
             
         elif Comando == "TimerAlarme":
-            Perifericos.appendAlarm(Comando,[MensagemList[1],MensagemList[2],time.ticks_ms()])
+            Perifericos.appendAlarm(Comando,[MensagemList[1],MensagemList[2],str(time.ticks_ms())])
             
         elif Comando == "ListaPass":
             if MensagemList[1] == "nextPag":
@@ -128,7 +138,18 @@ def MonitoraDisplay(Comando = 0): #Solicita resposta do nextion e retorna respos
                 Perifericos.DispDefUpDown(MensagemList[1], 1)
             elif MensagemList[2] == "Release":
                 Perifericos.DispDefUpDown(MensagemList[1], 0)
-    
+        
+        if Comando == "MudaModo":
+            Pref = wifi.CarregarInfo()
+            print(MensagemList)
+            if MensagemList[1] == "Blue":
+                Pref["Modo"] = "Bluetooth"
+            elif MensagemList[1] == "Wifi":
+                Pref["Modo"] = "AWS"
+            wifi.Salvar(Pref)
+            display.cmd("page Load")
+            time.sleep(1)
+            sys.exit()
     
     
     elif Resp.find("\\x") == 3: #Recebe resposta da pagina atual e segue para a funcao de mandar os valores dos componentes da tela
@@ -157,8 +178,7 @@ def MonitoraDisplay(Comando = 0): #Solicita resposta do nextion e retorna respos
             
 
             
-def SendTemps(T):
-    
+def SendTemps(T): 
     for x in range(3):
         display.cmd(f'TempAux.txt="{T[x]}"')
         display.cmd(f'TempAux.txt+=Graus.txt')

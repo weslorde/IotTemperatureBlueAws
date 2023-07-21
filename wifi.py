@@ -8,6 +8,7 @@ sta_if.active(True) #Liga Wifi
  
 def WifiConectar(): #Realiza e testa conexao
     Pref = CarregarInfo()
+    Salvar(Pref)
     if not sta_if.isconnected():
         print('Conectando...')
         sta_if.connect(Pref["Login"], Pref["Senha"])
@@ -30,10 +31,9 @@ import os
 
 def CarregarInfo(): #Carrega txt com informacoes salvas
     try:
-        Arquivo = open('Pref.txt','r')   #Tenta abrir Pref.txt
-        
+        Arquivo = open('Pref.txt','r')   #Tenta abrir Pref.txt     
     except:
-        return({"Login":'Motta', "Senha":'wes56145233', "NumSerie":12131415})   #Se NAO existe retorna um dicionario vazio
+        return({"Login":'Motta', "Senha":'wes56145233', "NumSerie":12131415, "Modo":'Bluetooth'})   #Se NAO existe retorna um dicionario vazio
     
     Pref = Arquivo.read()       #Passa as informacoes do txt para a variavel "Pref"
     Arquivo.close()             #Fecha o arquivo .txt 
@@ -41,9 +41,10 @@ def CarregarInfo(): #Carrega txt com informacoes salvas
 
 def Salvar(Pref):        #Salva conteudo da variavel Pref em um arquivo .txt
     print("Salvando")
-    Info = open('Pref.txt','w')      
-    Info.write(str(Pref))                          
-    Info.close
+    with open('Pref.txt','w') as Info:
+        print("Salvando: ",Pref)
+        Info.write(str(Pref))                          
+        Info.close
     
     
     

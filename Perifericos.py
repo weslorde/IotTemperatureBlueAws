@@ -211,7 +211,7 @@ def checaAlarmes():
     
     for item in TimerAlarme:
         #print(item)
-        diffTime = time.ticks_diff(time.ticks_ms(),item[2])
+        diffTime = time.ticks_diff(time.ticks_ms(),int(item[2]))
         
         minutos = str( (diffTime // 1000 // 60) % 60 )
         horas = str( (diffTime // 1000 // 3600) % 24 )

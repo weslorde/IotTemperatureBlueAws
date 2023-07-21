@@ -1,5 +1,6 @@
 import time
 
+from machine import WDT
 import bluetooth
 from BLE import BLEUART
 
@@ -10,6 +11,7 @@ import TestFlutterBlue
 import Perifericos
 import AlexaAWS
 
+import wifi
 from PID import PID
 
 timeTemp = time.ticks_ms() # Zera contador de tempo
@@ -19,11 +21,18 @@ DifTemps1 = [0,0,0,0,0,0,0,0,0,0]
 DifTemps2 = [0,0,0,0,0,0,0,0,0,0]
 DeltaTemps = [0,0,0,0,0,0,0,0,0]
 
-BlueEsp = TestFlutterBlue.FlutterBlue()
-Perifericos.passFunBlue(BlueEsp.enviaBlue)
+wdt = WDT(timeout=15000)  # enable it with a timeout of 10s
+wdt.feed()
 
-#IotAWS = AlexaAWS.AWS()
-
+Pref = wifi.CarregarInfo()
+wifi.Salvar(Pref)
+tipoConect = Pref["Modo"]
+if tipoConect == "Bluetooth":
+    BlueEsp = TestFlutterBlue.FlutterBlue()
+    Perifericos.passFunBlue(BlueEsp.enviaBlue)
+elif tipoConect == "AWS":
+    IotAWS = AlexaAWS.AWS()
+    
 #teste = _thread.start_new_thread(AlexaAWS.AWSLoop, ())
 
 #time.sleep(15)
@@ -36,7 +45,7 @@ def criaPID(Talvo):
     
     controleCount = 0
     pid = PID(0, 0.002, -0.0001, setpoint=Talvo)
-    pid.output_limits = (-6, 6) 
+    pid.output_limits = (-2, 2) 
     
 def controleTemp():
     global controleCount
@@ -45,22 +54,22 @@ def controleTemp():
     TGrelha = Temps[0]
     TAlvo = Temps[3]
     
-    if TAlvo > 20:    
+    if TAlvo > 30:    
         respPID = pid(TGrelha)
         print("Temp:", TGrelha, "PID:",respPID)
         controleCount += 1
-        if controleCount == 5:
+        if controleCount == 10:
             controleCount = 0
             print("test")
             
             if respPID > 0.3:
                 print("move motor Down ", str(respPID), " segundos")
-                Perifericos.MovMotor(Dir="Down", Vel=1000, Temp=int(respPID))
+                Perifericos.MovMotor(Dir="Down", Vel=600, Temp=int(respPID))
                 criaPID(TAlvo)
          
             elif pid(TGrelha) < -0.3:
                 print("move motor UP", str(respPID), " segundos")
-                Perifericos.MovMotor(Dir="Up", Vel=1000, Temp=int(respPID)*-1)
+                Perifericos.MovMotor(Dir="Up", Vel=600, Temp=int(respPID)*-1)
                 criaPID(TAlvo)
                 
     #Caso nao atender o 0.3 em 1 ciclo de teste so mover um valor minimo fixo (fazer!)
@@ -72,28 +81,41 @@ global controleCount
 controleCount = 0
 criaPID(0)
 Perifericos.funCriaPID(criaPID)
-
+errAws=0
 while(True):
       
     #--------Monitorar Temperatura-------------------------
     timeAtual = time.ticks_ms()
     
-    if time.ticks_diff(timeAtual,timeTemp) > 2000: #Realiza medida e envia a cada 4seg
+    if time.ticks_diff(timeAtual,timeTemp) > 5010: #ZeraTimer apos 10 seg
         #print(Perifericos.GetTemps()) 
-        Disp.QualPag()
-        timeTemp = time.ticks_ms()-1 # Zera contador de tempo
+        timeTemp = time.ticks_ms()-2 # Zera contador de tempo e retira um tempo para nao zerar as comparacoes
         
     #--------Fim Monitorar Temperatura-------------------------
+    if time.ticks_diff(timeAtual,timeTemp)%1000 == 0: wdt.feed()
     if time.ticks_diff(timeAtual,timeTemp)%200 == 0: Disp.MonitoraDisplay()
-       
+    if time.ticks_diff(timeAtual,timeTemp)%1000 == 0:  Disp.QualPag()
+    
     if time.ticks_diff(timeAtual,timeTemp)%50 == 0: Perifericos.MotorLogic()
     if time.ticks_diff(timeAtual,timeTemp)%10 == 0: Perifericos.FiltraEntradas()
     
-    #if time.ticks_diff(timeAtual,timeTemp)%500 == 0: IotAWS.checaMsg()
-    
-    if time.ticks_diff(timeAtual,timeTemp)%1500 == 0: controleTemp() #Como 1500 so acontece uma vez ate chegar no 2000 e zerar vai funcionar a cada 2000
+    if time.ticks_diff(timeAtual,timeTemp)%500 == 0: controleTemp() #Como 1500 so acontece uma vez ate chegar no 2000 e zerar vai funcionar a cada 2000
     
     if time.ticks_diff(timeAtual,timeTemp)%1000 == 0: Perifericos.checaAlarmes()
+    
+    if tipoConect == "Bluetooth":
+        pass
+    elif tipoConect == "AWS":
+        try:
+            if time.ticks_diff(timeAtual,timeTemp)%500 == 0: IotAWS.checaMsg()
+            errAws=0
+        except:
+            errAws+=1
+            print("EEEEEERRRRRRRRRRRRRPOOOOOOOOOOo")
+            if errAws >= 10:
+                while(1):
+                    time.sleep(1)
+        #if time.ticks_diff(timeAtual,timeTemp)%5000 == 0: IotAWS.attAwsShadow() #Receber pedido pelo aws
     
 
     
