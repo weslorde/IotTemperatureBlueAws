@@ -21,7 +21,7 @@ DifTemps1 = [0,0,0,0,0,0,0,0,0,0]
 DifTemps2 = [0,0,0,0,0,0,0,0,0,0]
 DeltaTemps = [0,0,0,0,0,0,0,0,0]
 
-wdt = WDT(timeout=15000)  # enable it with a timeout of 10s
+wdt = WDT(timeout=9999999)  # enable it with a timeout of 10s 15000
 wdt.feed()
 
 Pref = wifi.CarregarInfo()

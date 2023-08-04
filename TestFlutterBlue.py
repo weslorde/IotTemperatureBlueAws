@@ -5,6 +5,7 @@ from BLE import BLEUART
 
 import Perifericos
 import DisplayController as Disp
+import ExtASCII
 
 class FlutterBlue:
     global TBlue
@@ -17,11 +18,19 @@ class FlutterBlue:
                 
         msgRecebida = self.uart.read().decode()
         msgRecebida = msgRecebida.split("\x00") #Remove codigo de final da string
+        msgRede = msgRecebida[0]
         msgRecebida = msgRecebida[0].split(",")
         #print(msgRecebida[0])
         #msgRecebida = ExtASCII.myASCIIextToString( msgCodificada )  
         
         print(msgRecebida)
+        
+        
+        if(msgRecebida[0] == "WR" or msgRecebida[0] == "WS"):
+            teste = ExtASCII.myASCIIextToString(msgRede)
+            print("2: ", teste)    
+        
+        
         
         if(msgRecebida[0] == "Ping"):
             TGrelha, TSensor1, TSensor2, TempAlvo = Perifericos.GetTemps()
@@ -93,4 +102,3 @@ def blueLoop():
 
 if __name__ == "__main__":
     blueLoop()
-    
